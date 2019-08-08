@@ -1,0 +1,13 @@
+{
+  "name": "j-source-watcher",
+  "description": "Globally-run Yarn/npm tool for auto-compiling and executing Java",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^3.0.2"
+  },
+  "bin": {
+    "j-sandbox": "./bin/index.js"
+  },
+  "preferGlobal": true
+}
