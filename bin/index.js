@@ -27,9 +27,11 @@ const sourceFileWatcher = chokidar.watch('**/*.java', {
 	persistent: true
 })
 
+let compilationProcesses = new Map()
+
 const handler = (path, stats) => {
 	let timeSansMs = (new Date()).toISOString().replace('T',' ').split('.')[0]
-	console.debug(`\n${yellow(timeSansMs)} ~ ${underline(path)} changed; compiling${executeOutput ? ' and running' : ''}...`)
+	console.info(`\n${yellow(timeSansMs)} ~ ${underline(path)} changed; compiling${executeOutput ? ' and running' : ''}...`)
 
 	let srcName = path.replace(/\.java$/, '')
 	let outputDirFlag = useExeDir ? ' -d bin' : ''
@@ -43,8 +45,12 @@ const handler = (path, stats) => {
 		console.error(redUnderline(`Compiler exited with code: ${err.code}`))
 	})
 
+	let { pid } = compilationProcess
+	compilationProcesses.set(pid, srcName)
+
+
 	compilationProcess.stdout.on('end', () => {
-		if (!hitCompilerError) console.info(green('[Compiled with no errors]'))
+		if (!hitCompilerError) console.info(green(`[\`${compilationProcesses.get(pid)}\` compiled with no errors]`))
 
 		if (executeOutput && !hitCompilerError){
 			let executionProcess = exec(`java ${srcName}`, err => {
