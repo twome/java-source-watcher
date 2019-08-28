@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
-const chokidar = require('chokidar')
 const { exec } = require('child_process')
+const { argv } = process
+const { info, debug } = console
+
+const chokidar = require('chokidar')
 
 const asciiEscChar = '\x1b' // This is being escaped by the JS parser – it is an ASCII 'ESC' character from then on
 const csi = asciiEscChar + '[' // ANSI's "Control Sequence Introducer"
@@ -18,7 +21,10 @@ const underline = string => colorSequence('0;4') + string + clearColors
 const yellow = string => colorSequence('40') + string + clearColors
 
 const useExeDir = false
-const executeOutput = process.argv.slice(1).includes('--execute-output') || false
+const argsToProgram = argv.slice(1)
+const executeOutput = argsToProgram.includes('--execute-output')
+const classesToExecute = executeOutput ? argv.slice(argv.indexOf('--execute-output') + 1) : []
+info(`Executing classes: ${classesToExecute.join(', ')}`)
 
 const sourceFileWatcher = chokidar.watch('**/*.java', {
 	ignored: [
@@ -31,11 +37,10 @@ let compilationProcesses = new Map()
 
 const handler = (path, stats) => {
 	let timeSansMs = (new Date()).toISOString().replace('T',' ').split('.')[0]
-	console.info(`\n${yellow(timeSansMs)} ~ ${underline(path)} changed; compiling${executeOutput ? ' and running' : ''}...`)
+	console.info(`${yellow(timeSansMs)} ~ ${underline(path)} changed; compiling${executeOutput ? ' and running' : ''}...`)
 
 	let srcName = path.replace(/\.java$/, '')
 	let outputDirFlag = useExeDir ? ' -d bin' : ''
-	let execution = executeOutput ? ` && java ${srcName}` : ''
 
 	let hitCompilerError = false
 
@@ -46,14 +51,18 @@ const handler = (path, stats) => {
 	})
 
 	let { pid } = compilationProcess
-	compilationProcesses.set(pid, srcName)
+	compilationProcesses.set(pid, { name: srcName, startTime: new Date() })
 
 
 	compilationProcess.stdout.on('end', () => {
-		if (!hitCompilerError) console.info(green(`[\`${compilationProcesses.get(pid)}\` compiled with no errors]`))
+		const executionTime = (new Date() - compilationProcesses.get(pid).startTime) / 1000
 
-		if (executeOutput && !hitCompilerError){
-			let executionProcess = exec(`java ${srcName}`, err => {
+		if (!hitCompilerError) console.info(green(`[\``) + compilationProcesses.get(pid).name + green(`\` compiled with no errors after `) + `${executionTime}s` + green(`]`))
+
+		if (executeOutput && !hitCompilerError && classesToExecute.includes(srcName)){
+			console.info(`Running ${srcName}…`);
+
+			let executionProcess = exec(`java -enableassertions ${srcName}`, err => {
 				if (!err) return
 				console.error(redUnderline(`JVM exited with code: ${err.code}`))
 			})
