@@ -7,7 +7,7 @@
     "chokidar": "^3.0.2"
   },
   "bin": {
-    "j-sandbox": "./bin/index.js"
+    "j-source-watcher": "./bin/index.js"
   },
   "preferGlobal": true
 }
