@@ -1,5 +1,5 @@
 {
-  "name": "j-source-watcher",
+  "name": "java-tender",
   "description": "Globally-run Yarn/npm tool for auto-compiling and executing Java",
   "version": "1.0.0",
   "license": "MIT",
@@ -7,7 +7,7 @@
     "chokidar": "^3.0.2"
   },
   "bin": {
-    "j-source-watcher": "./bin/index.js"
+    "java-tender": "./bin/index.js"
   },
   "preferGlobal": true
 }
